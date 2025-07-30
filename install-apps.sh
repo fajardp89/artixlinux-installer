@@ -45,7 +45,8 @@ install_safe \
   alsa-utils \
   dbus \
   polkit \
-  networkmanager
+  networkmanager \
+  firefox
 
 ln -sf /etc/runit/sv/lightdm /etc/runit/runsvdir/default || true
 ln -sf /etc/runit/sv/dbus /etc/runit/runsvdir/default || true
