@@ -1,22 +1,27 @@
 #!/bin/bash
 set -e
 
+if [[ $EUID -ne 0 ]]; then
+  echo "[!] Jalankan script ini sebagai root!"
+  exit 1
+fi
+
 install_safe() {
   for pkg in "$@"; do
     echo "[+] Memasang paket: $pkg"
-    sudo pacman -S --noconfirm "$pkg" || echo "[!] Gagal memasang $pkg, dilewati."
+    pacman -S --noconfirm "$pkg" || echo "[!] Gagal memasang $pkg, dilewati."
   done
 }
 
 install_safe_needed() {
   for pkg in "$@"; do
     echo "[+] Memasang paket (cek sudah ada dulu): $pkg"
-    sudo pacman -S --noconfirm --needed "$pkg" || echo "[!] Gagal memasang $pkg, dilewati."
+    pacman -S --noconfirm --needed "$pkg" || echo "[!] Gagal memasang $pkg, dilewati."
   done
 }
 
 echo "[+] Update sistem"
-sudo pacman -Syu --noconfirm
+pacman -Syu --noconfirm
 
 echo "[+] Install Desktop Environment XFCE dan komponen pendukung"
 install_safe \
@@ -37,9 +42,15 @@ install_safe \
   thunar-archive-plugin \
   file-roller \
   sof-firmware \
-  alsa-utils
+  alsa-utils \
+  dbus \
+  polkit \
+  networkmanager
 
-sudo ln -sf /etc/runit/sv/lightdm /etc/runit/runsvdir/default || true
+ln -sf /etc/runit/sv/lightdm /etc/runit/runsvdir/default || true
+ln -sf /etc/runit/sv/dbus /etc/runit/runsvdir/default || true
+ln -sf /etc/runit/sv/polkitd /etc/runit/runsvdir/default || true
+ln -sf /etc/runit/sv/NetworkManager /etc/runit/runsvdir/default || true
 
 echo "[+] Install base-devel dan git (dibutuhkan untuk build AUR)"
 install_safe_needed base-devel git
@@ -57,8 +68,7 @@ fi
 
 echo "[+] Install dan aktifkan FirewallD"
 install_safe firewalld
-
-sudo ln -sf /etc/runit/sv/firewalld /etc/runit/runsvdir/default || true
+ln -sf /etc/runit/sv/firewalld /etc/runit/runsvdir/default || true
 
 echo "[✓] Instalasi selesai! Sistem akan reboot dalam 5 detik..."
 sleep 5
